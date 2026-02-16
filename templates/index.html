@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🚀 SuperApp Cotonou</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-indigo-50 to-orange-50 min-h-screen">
+    <div class="max-w-6xl mx-auto py-12 px-4">
+        <!-- Header -->
+        <div class="text-center mb-16">
+            <h1 class="text-6xl font-black bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-6">
+                🚀 SuperApp Cotonou
+            </h1>
+            <p class="text-xl text-gray-600 mb-8">Gozem • Livraisons • Appartements</p>
+        </div>
+
+        <!-- Services Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            <!-- Gozem -->
+            <div class="group bg-white rounded-3xl shadow-2xl p-8 hover:shadow-3xl transition-all cursor-pointer" onclick="bookGozem()">
+                <div class="w-20 h-20 bg-gradient-to-r from-orange-400 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-motorcycle text-2xl text-white"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">🚗 Gozem</h3>
+                <p class="text-gray-600 text-center mb-6">Courses moto & taxi</p>
+                <button class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 px-6 rounded-2xl font-bold hover:shadow-xl transform hover:-translate-y-1 transition-all">
+                    Commander
+                </button>
+            </div>
+
+            <!-- Appartements -->
+            <div class="group bg-white rounded-3xl shadow-2xl p-8 hover:shadow-3xl transition-all cursor-pointer" onclick="listApartments()">
+                <div class="w-20 h-20 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-home text-2xl text-white"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">🏠 Appartements</h3>
+                <p class="text-gray-600 text-center mb-6">Meublés & équipés</p>
+                <button class="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-4 px-6 rounded-2xl font-bold hover:shadow-xl transform hover:-translate-y-1 transition-all">
+                    Voir logements
+                </button>
+            </div>
+
+            <!-- Livraisons -->
+            <div class="group bg-white rounded-3xl shadow-2xl p-8 hover:shadow-3xl transition-all">
+                <div class="w-20 h-20 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-box text-2xl text-white"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">📦 Livraisons</h3>
+                <p class="text-gray-600 text-center mb-6">Colis & courses</p>
+                <button disabled class="w-full bg-gray-300 text-gray-600 py-4 px-6 rounded-2xl font-bold cursor-not-allowed">
+                    Bientôt disponible
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="text-center">
+            <button onclick="window.open('/docs', '_blank')" 
+                    class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-12 py-6 rounded-3xl font-bold text-xl shadow-2xl hover:shadow-3xl transform hover:-translate-y-2 transition-all">
+                <i class="fas fa-play mr-3"></i> Tester APIs
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function bookGozem() {
+            const ride = {
+                pickup_lat: 6.3703, pickup_lng: 2.3912,
+                dropoff_lat: 6.3650, dropoff_lng: 2.4200,
+                phone: '+22990123456'
+            };
+            
+            const response = await fetch('/api/gozem/rides', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(ride)
+            });
+            
+            const result = await response.json();
+            alert(`✅ Course Gozem #${result.ride_id} bookée ! ${result.estimated_price} FCFA`);
+        }
+
+        async function listApartments() {
+            const response = await fetch('/api/apartments?city=Cotonou');
+            const apartments = await response.json();
+            
+            let html = '<h2 class="text-3xl font-bold mb-8">🏠 Appartements Cotonou</h2>';
+            apartments.forEach(apt => {
+                html += `
+                    <div class="bg-white rounded-2xl p-6 shadow-xl mb-6">
+                        <h3 class="text-2xl font-bold">${apt.title}</h3>
+                        <p>${apt.price_per_night} FCFA/nuit • ${apt.max_guests} pers</p>
+                        <button onclick="bookApartment(${apt.id})" class="mt-4 bg-blue-500 text-white px-6 py-2 rounded-xl font-bold">
+                            Réserver
+                        </button>
+                    </div>
+                `;
+            });
+            
+            document.body.innerHTML += `<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">${html}</div>`;
+        }
+
+        async function bookApartment(id) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dayAfter = new Date(tomorrow.getTime() + 24*60*60*1000);
+            
+            const response = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    apartment_id: id,
+                    start_date: tomorrow.toISOString().split('T')[0],
+                    end_date: dayAfter.toISOString().split('T')[0],
+                    guests: 2
+                })
+            });
+            
+            const result = await response.json();
+            alert(`✅ Réservation #${result.booking_id} ! ${result.total_amount} FCFA`);
+        }
+    </script>
+</body>
+</html>
